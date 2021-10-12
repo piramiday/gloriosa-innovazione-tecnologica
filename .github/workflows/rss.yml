@@ -1,0 +1,71 @@
+name: rss
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '0 * * * *'
+jobs:
+
+  mitd:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: pull
+        run: |
+          git fetch -a
+          git checkout origin/mitd -- mitd.xml || true
+          mv {mitd,old}.xml || true
+
+      - name: update
+        run: bash mitd.sh > mitd.xml
+
+      - name: diff
+        run: |
+          grep '<item' old.xml > .diff0.xml || true
+          grep '<item' mitd.xml > .diff1.xml
+          diff .diff?.xml || true
+          echo "DIFF=$(diff .diff?.xml > /dev/null; echo $?)" | tee -a $GITHUB_ENV
+
+      - name: push
+        if: env.DIFF != 0
+        run: |
+          git config user.name $GITHUB_ACTOR
+          git config user.email $GITHUB_ACTOR@users.noreply.github.com
+          git checkout --orphan mitd
+          git rm --cached -rf .
+          git add mitd.xml
+          git commit -m "$(date +%s)"
+          git push origin mitd --force || true
+
+  pica:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: pull
+        run: |
+          git fetch -a
+          git checkout origin/pica -- pica.xml || true
+          mv {pica,old}.xml || true
+
+      - name: update
+        run: bash pica.sh > pica.xml
+
+      - name: diff
+        run: |
+          grep '<item' old.xml > .diff0.xml || true
+          grep '<item' pica.xml > .diff1.xml
+          diff .diff?.xml || true
+          echo "DIFF=$(diff .diff?.xml > /dev/null; echo $?)" | tee -a $GITHUB_ENV
+
+      - name: push
+        if: env.DIFF != 0
+        run: |
+          git config user.name $GITHUB_ACTOR
+          git config user.email $GITHUB_ACTOR@users.noreply.github.com
+          git checkout --orphan pica
+          git rm --cached -rf .
+          git add pica.xml
+          git commit -m "$(date +%s)"
+          git push origin pica --force || true
