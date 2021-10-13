@@ -13,19 +13,15 @@ grep 'class="search_title"' "$O" \
 | head -n$N \
 | sed 's/<[^>]*>//g;s/^\ *//;s/\ *//' \
 > _2
-grep 'class="default_call-desc"' "$O" \
-| head -n$N \
-| sed 's/<[^>]*>//g;s/^\ *//;s/\ *//' \
-> _3
 grep 'class="default_call-data"' "$O" -A1 \
 | grep time \
 | head -n$N \
 | sed 's/<[^>]*>//g;s/^\ *//;s/\ *//' \
 > _4
 echo "<rss version=\"2.0\"><channel><title>${W^^}</title><lastBuildDate>$(date)</lastBuildDate>"
-while IFS=$'\t' read -r H T L P; do
+while IFS=$'\t' read -r H T P; do
    PP=$(echo "$P" | sed 's|\([0-9]*\)-\([0-9]*\)-\([0-9]*\)\ \([0-9]*\):\([0-9]*\)|\3/\2/\1 \4:\5|')
-   echo "   <item><title>$T</title><guid>$D$H</guid><pubDate>$(date -d "$PP")</pubDate><description>$L</description></item>"
+   echo "   <item><title>$T</title><guid>$D$H</guid><pubDate>$(date -d "$PP")</pubDate></item>"
 done < <( paste _? )
 echo "</channel></rss>"
-rm -f _{1,2,3,4} "$O"
+rm -f _{1,2,4} "$O"
